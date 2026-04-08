@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cms.mapper.AuditLogMapper">
+
+    <resultMap id="AuditLogResultMap" type="com.cms.model.AuditLog">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="action" column="action"/>
+        <result property="entity" column="entity"/>
+        <result property="entityId" column="entity_id"/>
+        <result property="timestamp" column="timestamp"/>
+        <result property="oldValues" column="old_values"/>
+        <result property="newValues" column="new_values"/>
+        <result property="details" column="details"/>
+        <result property="ipAddress" column="ip_address"/>
+        <result property="correlationId" column="correlation_id"/>
+    </resultMap>
+
+    <sql id="auditColumns">
+        id, user_id, action, entity, entity_id, timestamp, old_values, new_values, details, ip_address, correlation_id
+    </sql>
+
+    <select id="findById" parameterType="long" resultMap="AuditLogResultMap">
+        SELECT <include refid="auditColumns"/>
+        FROM audit_logs
+        WHERE id = #{id}
+    </select>
+
+    <select id="findAll" resultMap="AuditLogResultMap">
+        SELECT <include refid="auditColumns"/>
+        FROM audit_logs
+        ORDER BY timestamp DESC
+        LIMIT 1000
+    </select>
+
+    <select id="findByUserId" parameterType="long" resultMap="AuditLogResultMap">
+        SELECT <include refid="auditColumns"/>
+        FROM audit_logs
+        WHERE user_id = #{userId}
+        ORDER BY timestamp DESC
+    </select>
+
+    <select id="findByEntity" resultMap="AuditLogResultMap">
+        SELECT <include refid="auditColumns"/>
+        FROM audit_logs
+        WHERE entity = #{entity} AND entity_id = #{entityId}
+        ORDER BY timestamp DESC
+    </select>
+
+    <select id="findByFilters" parameterType="map" resultMap="AuditLogResultMap">
+        SELECT <include refid="auditColumns"/>
+        FROM audit_logs
+        <where>
+            <if test="userId != null">AND user_id = #{userId}</if>
+            <if test="action != null and action != ''">AND action = #{action}</if>
+            <if test="entity != null and entity != ''">AND entity = #{entity}</if>
+            <if test="entityId != null and entityId != ''">AND entity_id = #{entityId}</if>
+            <if test="fromDate != null">AND timestamp &gt;= #{fromDate}</if>
+            <if test="toDate != null">AND timestamp &lt;= #{toDate}</if>
+        </where>
+        ORDER BY timestamp DESC
+        <if test="limit != null">LIMIT #{limit}</if>
+        <if test="offset != null">OFFSET #{offset}</if>
+    </select>
+
+    <select id="countByFilters" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM audit_logs
+        <where>
+            <if test="userId != null">AND user_id = #{userId}</if>
+            <if test="action != null and action != ''">AND action = #{action}</if>
+            <if test="entity != null and entity != ''">AND entity = #{entity}</if>
+        </where>
+    </select>
+
+    <insert id="insert" parameterType="com.cms.model.AuditLog" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO audit_logs (user_id, action, entity, entity_id, timestamp, old_values, new_values, details, ip_address, correlation_id)
+        VALUES (#{userId}, #{action}, #{entity}, #{entityId}, NOW(), #{oldValues}, #{newValues}, #{details}, #{ipAddress}, #{correlationId})
+    </insert>
+
+    <delete id="deleteById" parameterType="long">
+        DELETE FROM audit_logs WHERE id = #{id}
+    </delete>
+
+</mapper>

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+    <Properties>
+        <Property name="LOG_DIR">logs</Property>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level [%X{correlationId}] %logger{36} - %msg%n</Property>
+        <Property name="AUDIT_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} | %msg%n</Property>
+        <Property name="MAX_SIZE">100MB</Property>
+        <Property name="MAX_DAYS">30</Property>
+    </Properties>
+
+    <Appenders>
+        <!-- Console Appender -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </Console>
+
+        <!-- Application Rolling File Appender -->
+        <RollingFile name="AppFile"
+                     fileName="${LOG_DIR}/app.log"
+                     filePattern="${LOG_DIR}/app-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="${MAX_SIZE}"/>
+            </Policies>
+            <DefaultRolloverStrategy max="30">
+                <Delete basePath="${LOG_DIR}" maxDepth="1">
+                    <IfFileName glob="app-*.log.gz"/>
+                    <IfLastModified age="${MAX_DAYS}d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <!-- Error Rolling File Appender -->
+        <RollingFile name="ErrorFile"
+                     fileName="${LOG_DIR}/error.log"
+                     filePattern="${LOG_DIR}/error-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Filters>
+                <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="${MAX_SIZE}"/>
+            </Policies>
+            <DefaultRolloverStrategy max="30">
+                <Delete basePath="${LOG_DIR}" maxDepth="1">
+                    <IfFileName glob="error-*.log.gz"/>
+                    <IfLastModified age="${MAX_DAYS}d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <!-- Audit Rolling File Appender -->
+        <RollingFile name="AuditFile"
+                     fileName="${LOG_DIR}/audit.log"
+                     filePattern="${LOG_DIR}/audit-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${AUDIT_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="${MAX_SIZE}"/>
+            </Policies>
+            <DefaultRolloverStrategy max="30">
+                <Delete basePath="${LOG_DIR}" maxDepth="1">
+                    <IfFileName glob="audit-*.log.gz"/>
+                    <IfLastModified age="${MAX_DAYS}d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <!-- SQL Rolling File Appender -->
+        <RollingFile name="SqlFile"
+                     fileName="${LOG_DIR}/sql.log"
+                     filePattern="${LOG_DIR}/sql-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="${MAX_SIZE}"/>
+            </Policies>
+            <DefaultRolloverStrategy max="30">
+                <Delete basePath="${LOG_DIR}" maxDepth="1">
+                    <IfFileName glob="sql-*.log.gz"/>
+                    <IfLastModified age="${MAX_DAYS}d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <!-- Security Rolling File Appender -->
+        <RollingFile name="SecurityFile"
+                     fileName="${LOG_DIR}/security.log"
+                     filePattern="${LOG_DIR}/security-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="${MAX_SIZE}"/>
+            </Policies>
+            <DefaultRolloverStrategy max="30">
+                <Delete basePath="${LOG_DIR}" maxDepth="1">
+                    <IfFileName glob="security-*.log.gz"/>
+                    <IfLastModified age="${MAX_DAYS}d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <!-- Async Wrappers -->
+        <Async name="AsyncApp">
+            <AppenderRef ref="AppFile"/>
+        </Async>
+        <Async name="AsyncError">
+            <AppenderRef ref="ErrorFile"/>
+        </Async>
+        <Async name="AsyncAudit">
+            <AppenderRef ref="AuditFile"/>
+        </Async>
+        <Async name="AsyncSql">
+            <AppenderRef ref="SqlFile"/>
+        </Async>
+        <Async name="AsyncSecurity">
+            <AppenderRef ref="SecurityFile"/>
+        </Async>
+    </Appenders>
+
+    <Loggers>
+        <!-- Audit logger -->
+        <Logger name="audit" level="INFO" additivity="false">
+            <AppenderRef ref="AsyncAudit"/>
+        </Logger>
+
+        <!-- Security logger -->
+        <Logger name="security" level="INFO" additivity="false">
+            <AppenderRef ref="AsyncSecurity"/>
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <!-- Application logger -->
+        <Logger name="com.cms" level="DEBUG" additivity="false">
+            <AppenderRef ref="AsyncApp"/>
+            <AppenderRef ref="AsyncError"/>
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <!-- MyBatis SQL logger -->
+        <Logger name="org.apache.ibatis" level="DEBUG" additivity="false">
+            <AppenderRef ref="AsyncSql"/>
+        </Logger>
+        <Logger name="org.mybatis" level="DEBUG" additivity="false">
+            <AppenderRef ref="AsyncSql"/>
+        </Logger>
+        <Logger name="com.cms.mapper" level="DEBUG" additivity="false">
+            <AppenderRef ref="AsyncSql"/>
+        </Logger>
+
+        <!-- Spring Security -->
+        <Logger name="org.springframework.security" level="INFO" additivity="false">
+            <AppenderRef ref="AsyncSecurity"/>
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <!-- Root logger -->
+        <Root level="INFO">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="AsyncApp"/>
+            <AppenderRef ref="AsyncError"/>
+        </Root>
+    </Loggers>
+</Configuration>
