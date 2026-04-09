@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cms.mapper.CustomerMapper">
+
+    <resultMap id="CustomerResultMap" type="com.cms.model.Customer">
+        <id property="id" column="id"/>
+        <result property="nameEn" column="name_en"/>
+        <result property="nameAr" column="name_ar"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="address" column="address"/>
+        <result property="status" column="status"/>
+        <result property="createdDate" column="created_date"/>
+        <result property="updatedDate" column="updated_date"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="updatedBy" column="updated_by"/>
+    </resultMap>
+
+    <sql id="customerColumns">
+        id, name_en, name_ar, phone, email, address, status, created_date, updated_date, created_by, updated_by
+    </sql>
+
+    <select id="findById" parameterType="long" resultMap="CustomerResultMap">
+        SELECT <include refid="customerColumns"/>
+        FROM customers
+        WHERE id = #{id}
+    </select>
+
+    <select id="findAll" resultMap="CustomerResultMap">
+        SELECT <include refid="customerColumns"/>
+        FROM customers
+        ORDER BY created_date DESC
+    </select>
+
+    <select id="findPage" resultMap="CustomerResultMap">
+        SELECT <include refid="customerColumns"/>
+        FROM customers
+        ORDER BY created_date DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM customers
+    </select>
+
+    <select id="findByFilters" parameterType="map" resultMap="CustomerResultMap">
+        SELECT <include refid="customerColumns"/>
+        FROM customers
+        <where>
+            <if test="nameEn != null and nameEn != ''">AND name_en LIKE CONCAT('%', #{nameEn}, '%')</if>
+            <if test="nameAr != null and nameAr != ''">AND name_ar LIKE CONCAT('%', #{nameAr}, '%')</if>
+            <if test="email != null and email != ''">AND email LIKE CONCAT('%', #{email}, '%')</if>
+            <if test="phone != null and phone != ''">AND phone LIKE CONCAT('%', #{phone}, '%')</if>
+            <if test="status != null and status != ''">AND status = #{status}</if>
+        </where>
+        <if test="orderBy != null and orderBy != ''">ORDER BY ${orderBy}</if>
+        <if test="orderBy == null or orderBy == ''">ORDER BY created_date DESC</if>
+        <if test="limit != null">LIMIT #{limit}</if>
+        <if test="offset != null">OFFSET #{offset}</if>
+    </select>
+
+    <select id="countByFilters" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM customers
+        <where>
+            <if test="nameEn != null and nameEn != ''">AND name_en LIKE CONCAT('%', #{nameEn}, '%')</if>
+            <if test="nameAr != null and nameAr != ''">AND name_ar LIKE CONCAT('%', #{nameAr}, '%')</if>
+            <if test="email != null and email != ''">AND email LIKE CONCAT('%', #{email}, '%')</if>
+            <if test="phone != null and phone != ''">AND phone LIKE CONCAT('%', #{phone}, '%')</if>
+            <if test="status != null and status != ''">AND status = #{status}</if>
+        </where>
+    </select>
+
+    <select id="searchByName" parameterType="string" resultMap="CustomerResultMap">
+        SELECT <include refid="customerColumns"/>
+        FROM customers
+        WHERE name_en LIKE CONCAT('%', #{name}, '%')
+           OR name_ar LIKE CONCAT('%', #{name}, '%')
+        ORDER BY name_en
+        LIMIT 50
+    </select>
+
+    <insert id="insert" parameterType="com.cms.model.Customer" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO customers (name_en, name_ar, phone, email, address, status, created_date, updated_date, created_by, updated_by)
+        VALUES (#{nameEn}, #{nameAr}, #{phone}, #{email}, #{address}, #{status}, NOW(), NOW(), #{createdBy}, #{updatedBy})
+    </insert>
+
+    <update id="update" parameterType="com.cms.model.Customer">
+        UPDATE customers
+        <set>
+            <if test="nameEn != null">name_en = #{nameEn},</if>
+            <if test="nameAr != null">name_ar = #{nameAr},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updatedBy != null">updated_by = #{updatedBy},</if>
+            updated_date = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="long">
+        DELETE FROM customers WHERE id = #{id}
+    </delete>
+
+</mapper>
